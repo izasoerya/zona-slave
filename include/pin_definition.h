@@ -8,6 +8,6 @@
 #define NH3 34
 #define CO 35
 
-#define I2S_WS 15
+#define I2S_WS 14
 #define I2S_SD 13
-#define I2S_SCK 14
+#define I2S_SCK 15

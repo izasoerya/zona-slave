@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <array>
 
 struct SensorData
 {
@@ -7,7 +8,8 @@ struct SensorData
     float nh3;
     float co2;
     float no2;
-    float frequency;
+    int32_t frequency;
+    size_t frequencyLength;
     float windSpeed;
     uint16_t lux;
 
@@ -19,6 +21,7 @@ struct SensorData
 
     void debugAll(HardwareSerial &Serial)
     {
+        int sum = 0;
         Serial.print("Temperature: ");
         Serial.println(temperature);
         Serial.print("Humidity: ");
@@ -29,8 +32,12 @@ struct SensorData
         Serial.println(co2);
         Serial.print("NO2: ");
         Serial.println(no2);
-        Serial.print("Frequency: ");
-        Serial.println(frequency);
+        // Serial.print("Frequency: ");
+        // for (int i = 0; i < frequencyLength; ++i)
+        // {
+        //     sum += frequency[i];
+        // }
+        // Serial.println(sum);
         Serial.print("Wind Speed: ");
         Serial.println(windSpeed);
         Serial.print("Lux: ");
