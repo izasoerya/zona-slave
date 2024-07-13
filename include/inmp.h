@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <driver/i2s.h>
 #include "pin_definition.h"
+#include "models.h"
 
 class INMP441
 {
@@ -11,7 +12,7 @@ public:
     INMP441();
     ~INMP441();
     bool begin();
-    int32_t read();
+    FrequencyData read();
 
 private:
 };

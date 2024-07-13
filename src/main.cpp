@@ -94,7 +94,7 @@ void sensorLight()
 void sensorINMP()
 {
   // data.frequencyLength = sizeof(inmp.read()) / sizeof(inmp.read()[0]);
-  data.frequency = inmp.read();
+  data.frequencyData = inmp.read();
 }
 
 void loop() { vTaskDelete(NULL); }

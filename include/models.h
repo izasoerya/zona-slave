@@ -1,5 +1,12 @@
+#pragma once
+
 #include <Arduino.h>
 #include <array>
+
+struct FrequencyData
+{
+    int32_t frequency[64];
+};
 
 struct SensorData
 {
@@ -9,7 +16,7 @@ struct SensorData
     float co2;
     float no2;
     int32_t frequency;
-    size_t frequencyLength;
+    FrequencyData frequencyData;
     float windSpeed;
     uint16_t lux;
 
@@ -21,26 +28,25 @@ struct SensorData
 
     void debugAll(HardwareSerial &Serial)
     {
-        int sum = 0;
-        Serial.print("Temperature: ");
-        Serial.println(temperature);
-        Serial.print("Humidity: ");
-        Serial.println(humidity);
-        Serial.print("NH3: ");
-        Serial.println(nh3);
-        Serial.print("CO2: ");
-        Serial.println(co2);
-        Serial.print("NO2: ");
-        Serial.println(no2);
-        // Serial.print("Frequency: ");
-        // for (int i = 0; i < frequencyLength; ++i)
-        // {
-        //     sum += frequency[i];
-        // }
-        // Serial.println(sum);
-        Serial.print("Wind Speed: ");
-        Serial.println(windSpeed);
-        Serial.print("Lux: ");
-        Serial.println(lux);
+        // Serial.print("Temperature: ");
+        // Serial.println(temperature);
+        // Serial.print("Humidity: ");
+        // Serial.println(humidity);
+        // Serial.print("NH3: ");
+        // Serial.println(nh3);
+        // Serial.print("CO2: ");
+        // Serial.println(co2);
+        // Serial.print("NO2: ");
+        // Serial.println(no2);
+        // Serial.print("Wind Speed: ");
+        // Serial.println(windSpeed);
+        // Serial.print("Lux: ");
+        // Serial.println(lux);
+        // Serial.println("");
+        for (int i = 0; i < 64; i++)
+        {
+            Serial.print(frequencyData.frequency[i]);
+            Serial.print(" ");
+        }
     }
 };

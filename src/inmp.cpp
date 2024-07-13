@@ -31,16 +31,17 @@ bool INMP441::begin()
     return true; // Replace with appropriate return value
 }
 
-int32_t INMP441::read()
+FrequencyData INMP441::read()
 {
     const int sample_count = 64;
+    FrequencyData data;
     int32_t samples[sample_count];
     int32_t sum = 0;
     size_t bytes_read;
     i2s_read(I2S_NUM_0, (void *)samples, sample_count * sizeof(int32_t), &bytes_read, portMAX_DELAY);
     for (int i = 0; i < 64; i++)
     {
-        Serial.println(samples[i]);
+        data.frequency[i] = samples[i];
     }
-    return (sum / 64); // Replace with appropriate return value
+    return data;
 }
