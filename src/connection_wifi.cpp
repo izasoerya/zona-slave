@@ -1,11 +1,12 @@
 #include "connection_wifi.h"
 
-WiFiConnection::WiFiConnection() : wifiClient(WiFiClientSecure()), mqttClient(PubSubClient(wifiClient)) {}
+WiFiConnection::WiFiConnection() : wifiClient(WiFiClientSecure()), mqttClient(PubSubClient(wifiClient)), jsonDoc(JsonDocument()) {}
 
 WiFiConnection::~WiFiConnection() {}
 
 void WiFiConnection::begin()
 {
+    WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED)
     {
@@ -14,8 +15,24 @@ void WiFiConnection::begin()
     }
     Serial.print("Connected to WiFi with IP: ");
     Serial.println(WiFi.localIP());
+
+    wifiClient.setInsecure();
     mqttClient.setServer(mqttServer, mqttPort);
-    mqttClient.subscribe("/sensor-data");
+    mqttClient.subscribe(mqttTopic);
+}
+
+String WiFiConnection::publishMQTT(SensorData sensorData)
+{
+    String finalData;
+    jsonDoc["id"] = nodeID;
+    jsonDoc["temp"] = sensorData.temperature;
+    jsonDoc["hum"] = sensorData.humidity;
+
+    serializeJson(jsonDoc, finalData);
+    mqttClient.beginPublish(mqttTopic, measureJson(jsonDoc), 0);
+    serializeJson(jsonDoc, mqttClient);
+    mqttClient.endPublish();
+    return finalData;
 }
 
 void WiFiConnection::reconnect()
@@ -27,19 +44,19 @@ void WiFiConnection::reconnect()
     }
 }
 
-void WiFiConnection::reconnectMQTT(PubSubClient &client)
+void WiFiConnection::reconnectMQTT()
 {
-    while (!client.connected())
+    while (!mqttClient.connected())
     {
         Serial.println("Connecting to MQTT broker...");
-        if (client.connect("ESP32Client"))
+        if (mqttClient.connect("esp", "device_1", "device_1_admin"))
         {
             Serial.println("Connected to MQTT broker");
         }
         else
         {
             Serial.print("Failed to connect to MQTT broker, rc=");
-            Serial.print(client.state());
+            Serial.print(mqttClient.state());
             Serial.println(" retrying in 5 seconds");
             delay(3000);
         }

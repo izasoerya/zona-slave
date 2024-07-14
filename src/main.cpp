@@ -22,6 +22,8 @@ MICS6814 mics;
 AmbientLight light;
 INMP441 inmp;
 WiFiConnection wifi;
+// WiFiClientSecure espClient;
+// PubSubClient mqttClient(espClient);
 SensorData data;
 
 void setup()
@@ -35,17 +37,42 @@ void setup()
   sht.begin();
   light.begin();
   inmp.begin();
+  // espClient.setInsecure();
+  // const char *mqttServer = "k91ed63b.ala.us-east-1.emqxsl.com";
+  // mqttClient.setServer(mqttServer, 8883);
+  // const char *mqttTopic = "sensor-data";
+  // mqttClient.subscribe(mqttTopic);
 
   // Here i use RTOS just in case need multithreading
   // add more task if needed
-  xTaskCreate(taskFetchSensors, "all sensor", 2048, NULL, 1, _handlerFetchSensors);
+  xTaskCreate(taskFetchSensors, "all sensor", 20000, NULL, 1, _handlerFetchSensors);
   // xTaskCreate(taskSampling, "inmp", 2048, NULL, 1, _handlerSampling);
 }
+
+// void reconnectMQTT()
+// {
+//   while (!mqttClient.connected())
+//   {
+//     Serial.println("Connecting to MQTT broker...");
+//     if (mqttClient.connect("esp", "device_1", "device_1_admin"))
+//     {
+//       Serial.println("Connected to MQTT broker");
+//     }
+//     else
+//     {
+//       Serial.print("Failed to connect to MQTT broker, rc=");
+//       Serial.print(mqttClient.state());
+//       Serial.println(" retrying in 5 seconds");
+//       delay(3000);
+//     }
+//   }
+// }
 
 void taskFetchSensors(void *pvParameters)
 {
   while (true)
   {
+    wifi.reconnectMQTT();
     if (data.sht20Enable)
       sensorSHT();
     if (data.micsEnable)
@@ -56,6 +83,7 @@ void taskFetchSensors(void *pvParameters)
       sensorINMP();
 
     data.debugAll(Serial);
+    wifi.publishMQTT(data);
     wifi.reconnect();
 
     vTaskDelay(1000);

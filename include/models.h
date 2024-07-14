@@ -28,25 +28,25 @@ struct SensorData
 
     void debugAll(HardwareSerial &Serial)
     {
-        // Serial.print("Temperature: ");
-        // Serial.println(temperature);
-        // Serial.print("Humidity: ");
-        // Serial.println(humidity);
-        // Serial.print("NH3: ");
-        // Serial.println(nh3);
-        // Serial.print("CO2: ");
-        // Serial.println(co2);
-        // Serial.print("NO2: ");
-        // Serial.println(no2);
-        // Serial.print("Wind Speed: ");
-        // Serial.println(windSpeed);
-        // Serial.print("Lux: ");
-        // Serial.println(lux);
-        // Serial.println("");
-        for (int i = 0; i < 64; i++)
-        {
-            Serial.print(frequencyData.frequency[i]);
-            Serial.print(" ");
-        }
+        Serial.print("Temperature: ");
+        Serial.println(temperature);
+        Serial.print("Humidity: ");
+        Serial.println(humidity);
+        Serial.print("NH3: ");
+        Serial.println(nh3);
+        Serial.print("CO2: ");
+        Serial.println(co2);
+        Serial.print("NO2: ");
+        Serial.println(no2);
+        Serial.print("Wind Speed: ");
+        Serial.println(windSpeed);
+        Serial.print("Lux: ");
+        Serial.println(lux);
+        Serial.println("");
+        // for (int i = 0; i < 64; i++)
+        // {
+        //     Serial.print(frequencyData.frequency[i]);
+        //     Serial.print(" ");
+        // }
     }
 };
