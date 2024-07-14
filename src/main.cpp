@@ -3,8 +3,8 @@
 #include "pin_definition.h"
 #include "sht20.h"
 #include "mics.h"
-#include "ambient_light.h"
 #include "inmp.h"
+#include "ambient_light.h"
 #include "models.h"
 
 void taskFetchSensors(void *pvParameters);
