@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Arduino.h>
-#include <array>
 
 struct FrequencyData
 {
@@ -15,10 +14,9 @@ struct SensorData
     float nh3;
     float co2;
     float no2;
-    int32_t frequency;
+    uint16_t lux;
     FrequencyData frequencyData;
     float windSpeed;
-    uint16_t lux;
 
     bool sht20Enable = true;
     bool micsEnable = true;

@@ -25,10 +25,14 @@ String WiFiConnection::publishMQTT(SensorData sensorData)
 {
     String finalData;
     jsonDoc["id"] = nodeID;
-    jsonDoc["temp"] = sensorData.temperature;
-    jsonDoc["hum"] = sensorData.humidity;
+    jsonDoc["temp"] = String(sensorData.temperature, 2);
+    jsonDoc["hum"] = String(sensorData.humidity, 2);
+    jsonDoc["nh3"] = String(sensorData.nh3, 2);
+    jsonDoc["lux"] = String(sensorData.lux);
+    JsonArray freq = jsonDoc["freq"].to<JsonArray>();
+    for (int i = 0; i < 64; i++)
+        freq.add(sensorData.frequencyData.frequency[i]);
 
-    serializeJson(jsonDoc, finalData);
     mqttClient.beginPublish(mqttTopic, measureJson(jsonDoc), 0);
     serializeJson(jsonDoc, mqttClient);
     mqttClient.endPublish();
