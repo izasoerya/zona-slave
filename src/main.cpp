@@ -2,6 +2,7 @@
 #include "connection_wifi.h"
 #include "pin_definition.h"
 #include "sht20.h"
+#include "anemometer.h"
 #include "mics.h"
 #include "inmp.h"
 #include "ambient_light.h"
@@ -14,8 +15,10 @@ void sensorSHT();
 void sensorMICS();
 void sensorLight();
 void sensorINMP();
+void sensorAnemometer();
 
 SHT20 sht;
+Anemometer anemometer;
 MICS6814 mics;
 AmbientLight light;
 INMP441 inmp;
@@ -30,9 +33,14 @@ void setup()
 
   pinMode(RE_MODBUS, OUTPUT);
   pinMode(DE_MODBUS, OUTPUT);
-  sht.begin();
-  light.begin();
-  inmp.begin();
+  if (data.sht20Enable)
+    sht.begin();
+  if (data.anemometerEnable)
+    anemometer.begin();
+  if (data.lightEnable)
+    light.begin();
+  if (data.inmpEnable)
+    inmp.begin();
 
   // Here i use RTOS just in case need multithreading
   // add more task if needed
@@ -44,13 +52,13 @@ void taskFetchSensors(void *pvParameters)
   while (true)
   {
     wifi.reconnectMQTT();
-    if (data.sht20Enable)
+    if (data.sht20Enable) //! ENABLE/DISABLE (default true) SENSOR
       sensorSHT();
-    if (data.micsEnable)
+    if (data.micsEnable) //! ENABLE/DISABLE (default true) SENSOR
       sensorMICS();
-    if (data.lightEnable)
+    if (data.lightEnable) //! ENABLE/DISABLE (default true) SENSOR
       sensorLight();
-    if (data.inmpEnable)
+    if (data.inmpEnable) //! ENABLE/DISABLE (default true) SENSOR
       sensorINMP();
 
     data.debugAll(Serial);
@@ -65,6 +73,11 @@ void sensorSHT()
 {
   data.temperature = sht.readTemperature();
   data.humidity = sht.readHumidity();
+}
+
+void sensorAnemometer()
+{
+  data.windSpeed = anemometer.readWindSpeed();
 }
 
 void sensorMICS()
