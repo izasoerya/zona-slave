@@ -16,7 +16,7 @@ struct SensorData
     float no2;
     uint16_t lux;
     FrequencyData frequencyData;
-    float windSpeed;
+    uint16_t windSpeed;
 
     bool sht20Enable = false;
     bool micsEnable = false;
@@ -62,10 +62,5 @@ struct SensorData
             Serial.println(lux);
         }
         Serial.println("");
-        // for (int i = 0; i < 64; i++)
-        // {
-        //     Serial.print(frequencyData.frequency[i]);
-        //     Serial.print(" ");
-        // }
     }
 };

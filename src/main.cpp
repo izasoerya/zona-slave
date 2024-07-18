@@ -28,7 +28,8 @@ SensorData data;
 void setup()
 {
   Serial.begin(9600);
-  Modbus.begin(9600);
+  uint16_t baudModbus = data.anemometerEnable ? 4800 : 9600;
+  Modbus.begin(baudModbus);
   wifi.begin();
 
   pinMode(RE_MODBUS, OUTPUT);
@@ -60,6 +61,8 @@ void taskFetchSensors(void *pvParameters)
       sensorLight();
     if (data.inmpEnable) //! ENABLE/DISABLE (default true) SENSOR
       sensorINMP();
+    if (data.anemometerEnable) //! ENABLE/DISABLE (default true) SENSOR
+      sensorAnemometer();
 
     data.debugAll(Serial);
     wifi.publishMQTT(data);

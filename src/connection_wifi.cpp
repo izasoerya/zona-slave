@@ -24,15 +24,22 @@ void WiFiConnection::begin()
 String WiFiConnection::publishMQTT(SensorData sensorData)
 {
     String finalData;
-    jsonDoc["id"] = nodeID;
-    jsonDoc["temp"] = String(sensorData.temperature, 2);
-    jsonDoc["hum"] = String(sensorData.humidity, 2);
-    jsonDoc["nh3"] = String(sensorData.nh3, 2);
-    jsonDoc["lux"] = String(sensorData.lux);
-    JsonArray freq = jsonDoc["freq"].to<JsonArray>();
-    for (int i = 0; i < 64; i++)
-        freq.add(sensorData.frequencyData.frequency[i]);
-
+    if (sensorData.anemometerEnable)
+    {
+        jsonDoc["id"] = 1; // back
+        jsonDoc["wind"] = String(sensorData.windSpeed);
+    }
+    else
+    {
+        jsonDoc["id"] = 0; // front
+        jsonDoc["temp"] = String(sensorData.temperature, 2);
+        jsonDoc["hum"] = String(sensorData.humidity, 2);
+        jsonDoc["nh3"] = String(sensorData.nh3, 2);
+        jsonDoc["lux"] = String(sensorData.lux);
+        JsonArray freq = jsonDoc["freq"].to<JsonArray>();
+        for (int i = 0; i < 64; i++)
+            freq.add(sensorData.frequencyData.frequency[i]);
+    }
     mqttClient.beginPublish(mqttTopic, measureJson(jsonDoc), 0);
     serializeJson(jsonDoc, mqttClient);
     mqttClient.endPublish();
