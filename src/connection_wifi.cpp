@@ -1,6 +1,6 @@
 #include "connection_wifi.h"
 
-WiFiConnection::WiFiConnection() : wifiClient(WiFiClientSecure()), mqttClient(PubSubClient(wifiClient)), jsonDoc(JsonDocument()) {}
+WiFiConnection::WiFiConnection() : wifiClient(WiFiClient()), mqttClient(PubSubClient(wifiClient)), jsonDoc(JsonDocument()) {}
 
 WiFiConnection::~WiFiConnection() {}
 
@@ -15,10 +15,7 @@ void WiFiConnection::begin()
     }
     Serial.print("Connected to WiFi with IP: ");
     Serial.println(WiFi.localIP());
-
-    wifiClient.setInsecure();
     mqttClient.setServer(mqttServer, mqttPort);
-    mqttClient.subscribe(mqttTopic);
 }
 
 String WiFiConnection::publishMQTT(SensorData sensorData)
@@ -26,19 +23,14 @@ String WiFiConnection::publishMQTT(SensorData sensorData)
     String finalData;
     if (sensorData.anemometerEnable)
     {
-        jsonDoc["id"] = 1; // back
-        jsonDoc["wind"] = String(sensorData.windSpeed);
+        jsonDoc["wind_speed"] = (sensorData.windSpeed);
     }
     else
     {
-        jsonDoc["id"] = 0; // front
-        jsonDoc["temp"] = String(sensorData.temperature, 2);
-        jsonDoc["hum"] = String(sensorData.humidity, 2);
-        jsonDoc["nh3"] = String(sensorData.nh3, 2);
-        jsonDoc["lux"] = String(sensorData.lux);
-        JsonArray freq = jsonDoc["freq"].to<JsonArray>();
-        for (int i = 0; i < 64; i++)
-            freq.add(sensorData.frequencyData.frequency[i]);
+        jsonDoc["temperature"] = (sensorData.temperature);
+        jsonDoc["humidity"] = (sensorData.humidity);
+        jsonDoc["ammonia"] = (sensorData.nh3);
+        jsonDoc["light_intensity"] = (sensorData.lux);
     }
     mqttClient.beginPublish(mqttTopic, measureJson(jsonDoc), 0);
     serializeJson(jsonDoc, mqttClient);
@@ -59,17 +51,17 @@ void WiFiConnection::reconnectMQTT()
 {
     while (!mqttClient.connected())
     {
-        Serial.println("Connecting to MQTT broker...");
-        if (mqttClient.connect("esp", "device_1", "device_1_admin"))
+        Serial.print("Attempting MQTT connection...");
+        if (mqttClient.connect("/farm/3a99e243-2c69-447d-ba7d-30d2d126724c/sensor"))
         {
-            Serial.println("Connected to MQTT broker");
+            Serial.println("connected");
         }
         else
         {
-            Serial.print("Failed to connect to MQTT broker, rc=");
+            Serial.print("failed, rc=");
             Serial.print(mqttClient.state());
-            Serial.println(" retrying in 5 seconds");
-            delay(3000);
+            Serial.println(" try again in 5 seconds");
+            delay(5000);
         }
     }
 }
