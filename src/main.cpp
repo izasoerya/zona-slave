@@ -68,7 +68,7 @@ void taskFetchSensors(void *pvParameters)
     wifi.publishMQTT(data);
     wifi.reconnect();
 
-    vTaskDelay(5000);
+    vTaskDelay(1000);
   }
 }
 

@@ -27,10 +27,10 @@ String WiFiConnection::publishMQTT(SensorData sensorData)
     }
     else
     {
-        jsonDoc["temperature"] = (sensorData.temperature);
-        jsonDoc["humidity"] = (sensorData.humidity);
-        jsonDoc["ammonia"] = (sensorData.nh3);
-        jsonDoc["light_intensity"] = (sensorData.lux);
+        jsonDoc["temperature"] = round(sensorData.temperature * 100) / 100.0;
+        jsonDoc["humidity"] = round(sensorData.humidity * 100) / 100.0;
+        jsonDoc["ammonia"] = round(sensorData.nh3 * 100) / 100.0;
+        jsonDoc["light_intensity"] = round(sensorData.lux * 100) / 100.0;
     }
     mqttClient.beginPublish(mqttTopic, measureJson(jsonDoc), 0);
     serializeJson(jsonDoc, mqttClient);
