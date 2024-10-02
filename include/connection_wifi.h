@@ -25,7 +25,9 @@ private:
     const char *ssid = env_ssid;
     const char *password = env_password;
     const char *mqttServer = env_mqttServer;
-    const char *mqttTopic = "farm/3a99e243-2c69-447d-ba7d-30d2d126724c/sensor";
+    const char *mqttTopic;
+    const char *mqttTopicMain = "device/3a99e243-2c69-447d-ba7d-30d2d126724c/sensor/create";
+    const char *mqttTopicAnemo = "device/e8499855-ae64-473a-85bb-024c9177287e/sensor/create";
     const uint8_t nodeID = 0;
     uint16_t mqttPort = 1883;
     WiFiClient wifiClient;

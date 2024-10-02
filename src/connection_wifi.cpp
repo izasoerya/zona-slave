@@ -1,6 +1,9 @@
 #include "connection_wifi.h"
 
-WiFiConnection::WiFiConnection() : wifiClient(WiFiClient()), mqttClient(PubSubClient(wifiClient)), jsonDoc(JsonDocument()) {}
+WiFiConnection::WiFiConnection() : wifiClient(WiFiClient()), mqttClient(PubSubClient(wifiClient)), jsonDoc(JsonDocument())
+{
+    mqttTopic = SensorData().anemometerEnable ? mqttTopicAnemo : mqttTopicMain;
+}
 
 WiFiConnection::~WiFiConnection() {}
 
@@ -32,9 +35,10 @@ String WiFiConnection::publishMQTT(SensorData sensorData)
         jsonDoc["ammonia"] = round(sensorData.nh3 * 100) / 100.0;
         jsonDoc["light_intensity"] = round(sensorData.lux * 100) / 100.0;
     }
-    mqttClient.beginPublish(mqttTopic, measureJson(jsonDoc), 0);
+    mqttClient.beginPublish(mqttTopicMain, measureJson(jsonDoc), 0);
     serializeJson(jsonDoc, mqttClient);
     mqttClient.endPublish();
+    Serial.println("Data published to MQTT");
     return finalData;
 }
 
@@ -52,7 +56,7 @@ void WiFiConnection::reconnectMQTT()
     while (!mqttClient.connected())
     {
         Serial.print("Attempting MQTT connection...");
-        if (mqttClient.connect("/farm/3a99e243-2c69-447d-ba7d-30d2d126724c/sensor"))
+        if (mqttClient.connect(mqttTopicMain))
         {
             Serial.println("connected");
         }

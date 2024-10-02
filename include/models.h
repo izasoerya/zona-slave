@@ -18,11 +18,11 @@ struct SensorData
     FrequencyData frequencyData;
     uint16_t windSpeed;
 
-    bool sht20Enable = true;
-    bool micsEnable = true;
+    bool sht20Enable = false;
+    bool micsEnable = false;
     bool inmpEnable = false;
-    bool anemometerEnable = false;
-    bool lightEnable = true;
+    bool anemometerEnable = true;
+    bool lightEnable = false;
 
     void debugAll(HardwareSerial &Serial)
     {

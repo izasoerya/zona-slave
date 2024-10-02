@@ -68,7 +68,7 @@ void taskFetchSensors(void *pvParameters)
     wifi.publishMQTT(data);
     wifi.reconnect();
 
-    vTaskDelay(1000);
+    vTaskDelay(SensorData().anemometerEnable ? 3000 / portTICK_PERIOD_MS : 3000 / portTICK_PERIOD_MS);
   }
 }
 
