@@ -18,11 +18,11 @@ struct SensorData
     FrequencyData frequencyData;
     uint16_t windSpeed;
 
-    bool sht20Enable = false;
-    bool micsEnable = false;
+    bool sht20Enable = true;
+    bool micsEnable = true;
     bool inmpEnable = false;
-    bool anemometerEnable = true;
-    bool lightEnable = false;
+    bool anemometerEnable = false;
+    bool lightEnable = true;
 
     void debugAll(HardwareSerial &Serial)
     {
@@ -37,10 +37,6 @@ struct SensorData
         {
             Serial.print("NH3: ");
             Serial.println(nh3);
-            Serial.print("CO2: ");
-            Serial.println(co2);
-            Serial.print("NO2: ");
-            Serial.println(no2);
         }
         if (inmpEnable)
         {

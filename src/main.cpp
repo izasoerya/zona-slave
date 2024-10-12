@@ -42,7 +42,7 @@ void setup()
     light.begin();
   if (data.inmpEnable)
     inmp.begin();
-
+  randomSeed(analogRead(0));
   // Here i use RTOS just in case need multithreading
   // add more task if needed
   xTaskCreate(taskFetchSensors, "all sensor", 20000, NULL, 1, _handlerFetchSensors);

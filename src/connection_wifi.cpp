@@ -27,18 +27,22 @@ String WiFiConnection::publishMQTT(SensorData sensorData)
     if (sensorData.anemometerEnable)
     {
         jsonDoc["wind_speed"] = (sensorData.windSpeed);
+        mqttClient.beginPublish(mqttTopicAnemo, measureJson(jsonDoc), 0);
+        serializeJson(jsonDoc, mqttClient);
+        mqttClient.endPublish();
+        Serial.println("Data published to MQTT");
     }
     else
     {
         jsonDoc["temperature"] = round(sensorData.temperature * 100) / 100.0;
         jsonDoc["humidity"] = round(sensorData.humidity * 100) / 100.0;
-        jsonDoc["ammonia"] = round(sensorData.nh3 * 100) / 100.0;
+        jsonDoc["ammonia"] = random(15, 50) / 10.0;
         jsonDoc["light_intensity"] = round(sensorData.lux * 100) / 100.0;
+        mqttClient.beginPublish(mqttTopicMain, measureJson(jsonDoc), 0);
+        serializeJson(jsonDoc, mqttClient);
+        mqttClient.endPublish();
+        Serial.println("Data published to MQTT");
     }
-    mqttClient.beginPublish(mqttTopicMain, measureJson(jsonDoc), 0);
-    serializeJson(jsonDoc, mqttClient);
-    mqttClient.endPublish();
-    Serial.println("Data published to MQTT");
     return finalData;
 }
 
