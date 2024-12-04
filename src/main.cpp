@@ -8,9 +8,6 @@
 #include "ambient_light.h"
 #include "models.h"
 
-void taskFetchSensors(void *pvParameters);
-TaskHandle_t *_handlerFetchSensors;
-
 void sensorSHT();
 void sensorMICS();
 void sensorLight();
@@ -43,33 +40,31 @@ void setup()
   if (data.inmpEnable)
     inmp.begin();
   randomSeed(analogRead(0));
-  // Here i use RTOS just in case need multithreading
-  // add more task if needed
-  xTaskCreate(taskFetchSensors, "all sensor", 20000, NULL, 1, _handlerFetchSensors);
 }
 
-void taskFetchSensors(void *pvParameters)
+void loop()
 {
-  while (true)
-  {
-    wifi.reconnectMQTT();
-    if (data.sht20Enable) //! ENABLE/DISABLE (default true) SENSOR
-      sensorSHT();
-    if (data.micsEnable) //! ENABLE/DISABLE (default true) SENSOR
-      sensorMICS();
-    if (data.lightEnable) //! ENABLE/DISABLE (default true) SENSOR
-      sensorLight();
-    if (data.inmpEnable) //! ENABLE/DISABLE (default true) SENSOR
-      sensorINMP();
-    if (data.anemometerEnable) //! ENABLE/DISABLE (default true) SENSOR
-      sensorAnemometer();
+  wifi.reconnectMQTT();
 
-    data.debugAll(Serial);
-    wifi.publishMQTT(data);
-    wifi.reconnect();
+  // Fetch data from sensors if they are enabled
+  if (data.sht20Enable)
+    sensorSHT();
+  if (data.micsEnable)
+    sensorMICS();
+  if (data.lightEnable)
+    sensorLight();
+  if (data.inmpEnable)
+    sensorINMP();
+  if (data.anemometerEnable)
+    sensorAnemometer();
 
-    vTaskDelay(SensorData().anemometerEnable ? 3000 / portTICK_PERIOD_MS : 3000 / portTICK_PERIOD_MS);
-  }
+  // Debug and publish sensor data
+  data.debugAll(Serial);
+  wifi.publishMQTT(data);
+  wifi.reconnect();
+
+  // Delay to match the original task's interval (3 seconds)
+  delay(3000);
 }
 
 void sensorSHT()
@@ -99,5 +94,3 @@ void sensorINMP()
 {
   data.frequencyData = inmp.read();
 }
-
-void loop() { vTaskDelete(NULL); }
