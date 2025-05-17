@@ -6,7 +6,6 @@
 #include <WiFiClient.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
-#include "pin_definition.h"
 #include "env.h"
 #include "models.h"
 
