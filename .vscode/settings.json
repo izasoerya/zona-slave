@@ -1,5 +1,7 @@
 {
   "files.associations": {
+    "*.erd": "json",
+    "*.vuerd": "json",
     "*.tcc": "cpp",
     "fstream": "cpp",
     "iosfwd": "cpp",
@@ -15,7 +17,9 @@
     "vector": "cpp",
     "string_view": "cpp",
     "initializer_list": "cpp",
-    "cmath": "cpp"
+    "cmath": "cpp",
+    "random": "cpp",
+    "algorithm": "cpp"
   },
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",
@@ -56,10 +60,7 @@
   "C_Cpp_Runner.compilerArgs": [],
   "C_Cpp_Runner.linkerArgs": [],
   "C_Cpp_Runner.includePaths": [],
-  "C_Cpp_Runner.includeSearch": [
-    "*",
-    "**/*"
-  ],
+  "C_Cpp_Runner.includeSearch": ["*", "**/*"],
   "C_Cpp_Runner.excludeSearch": [
     "**/build",
     "**/build/**",
