@@ -20,6 +20,7 @@ void setup()
   wifi.begin();
   ModbusObject modbusObject[] = {temperature, humidity, ammonia};
   modbus = new Modbus(modbusObject, (sizeof(modbusObject) / sizeof(ModbusObject)));
+  modbus->begin();
 
   if (data.lightEnable)
     light.begin();
