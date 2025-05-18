@@ -1,9 +1,7 @@
 #include "connection_wifi.h"
 
-WiFiConnection::WiFiConnection() : wifiClient(WiFiClient()), mqttClient(PubSubClient(wifiClient)), jsonDoc(JsonDocument())
-{
-    mqttTopic = SensorData().anemometerEnable ? mqttTopicAnemo : mqttTopicMain;
-}
+WiFiConnection::WiFiConnection()
+    : wifiClient(WiFiClient()), mqttClient(PubSubClient(wifiClient)), jsonDoc(JsonDocument()) {}
 
 WiFiConnection::~WiFiConnection() {}
 
@@ -13,7 +11,7 @@ void WiFiConnection::begin()
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED)
     {
-        delay(1000);
+        delay(500);
         Serial.println("Connecting to WiFi..");
     }
     Serial.print("Connected to WiFi with IP: ");
@@ -21,12 +19,12 @@ void WiFiConnection::begin()
     mqttClient.setServer(mqttServer, mqttPort);
 }
 
-String WiFiConnection::publishMQTT(SensorData sensorData)
+String WiFiConnection::publishMQTT(SensorData data)
 {
     String finalData;
-    if (sensorData.anemometerEnable)
+    if (data.windSpeed != 0.1F)
     {
-        jsonDoc["wind_speed"] = (sensorData.windSpeed);
+        jsonDoc["wind_speed"] = (data.windSpeed);
         mqttClient.beginPublish(mqttTopicAnemo, measureJson(jsonDoc), 0);
         serializeJson(jsonDoc, mqttClient);
         mqttClient.endPublish();
@@ -34,10 +32,10 @@ String WiFiConnection::publishMQTT(SensorData sensorData)
     }
     else
     {
-        jsonDoc["temperature"] = round(sensorData.temperature * 100) / 100.0;
-        jsonDoc["humidity"] = round(sensorData.humidity * 100) / 100.0;
+        jsonDoc["temperature"] = round(data.temperature * 100) / 100.0;
+        jsonDoc["humidity"] = round(data.humidity * 100) / 100.0;
         jsonDoc["ammonia"] = random(1.5, 4.2) / 10.0;
-        jsonDoc["light_intensity"] = round(sensorData.lux * 100) / 100.0;
+        jsonDoc["light_intensity"] = round(data.lux * 100) / 100.0;
         mqttClient.beginPublish(mqttTopicMain, measureJson(jsonDoc), 0);
         serializeJson(jsonDoc, mqttClient);
         mqttClient.endPublish();
