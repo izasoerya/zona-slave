@@ -44,14 +44,7 @@ public:
 Modbus::Modbus(ModbusObject *pObject, uint8_t length)
 {
     objectLength = length;
-    if (objectLength == 2)
-    {
-        memcpy(object, pObject, 2 * sizeof(ModbusObject));
-    }
-    else if (objectLength == 1)
-    {
-        memcpy(object, pObject, sizeof(ModbusMaster));
-    }
+    memcpy(object, pObject, objectLength * sizeof(ModbusObject));
 }
 
 Modbus::~Modbus() {}
@@ -80,9 +73,16 @@ void Modbus::begin()
 
 float Modbus::readSingle(ModbusObject *obj)
 {
-    ModbusObject *selectedObj = (obj == &object[0]) ? &object[0] : &object[1];
+    ModbusObject *selectedObject;
+    for (int i = 0; i < objectLength; i++)
+    {
+        if (obj == &object[i])
+        {
+            selectedObject = &object[i];
+        }
+    }
 
-    uint8_t result = modbus.readInputRegisters(selectedObj->registerAddress, 1);
+    uint8_t result = modbus.readInputRegisters(selectedObject->registerAddress, 1);
     if (result == modbus.ku8MBSuccess)
     {
         return float(modbus.getResponseBuffer(0));
