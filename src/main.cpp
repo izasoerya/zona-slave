@@ -18,7 +18,8 @@ void setup()
 {
   Serial.begin(9600);
   wifi.begin();
-  ModbusObject modbusObject[] = {temperature, humidity, ammonia};
+
+  static ModbusObject modbusObject[] = {temperature, humidity, ammonia};
   modbus = new Modbus(modbusObject, (sizeof(modbusObject) / sizeof(ModbusObject)));
   modbus->begin();
 
