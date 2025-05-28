@@ -36,19 +36,19 @@ private:
     }
 
 public:
-    Modbus(ModbusObject *pObject, uint8_t length);
+    Modbus(ModbusObject **pObject, uint8_t length);
     ~Modbus();
 
     void begin();
     float readSingle(ModbusObject *object);
 };
 
-Modbus::Modbus(ModbusObject *pObject, uint8_t length)
+Modbus::Modbus(ModbusObject **pObject, uint8_t length)
 {
     objectLength = length;
     for (uint8_t i = 0; i < length; ++i)
     {
-        object[i] = &pObject[i];
+        object[i] = pObject[i];
     }
 }
 
@@ -105,6 +105,10 @@ float Modbus::readSingle(ModbusObject *obj)
         if (result == modbus.ku8MBSuccess)
         {
             return modbus.getResponseBuffer(0);
+        }
+        else
+        {
+            return result;
         }
         Serial.println(selectedObject->sensor);
         Serial.println(selectedObject->registerAddress);
