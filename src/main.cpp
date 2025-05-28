@@ -6,7 +6,7 @@
 
 ModbusObject temperature = {SensorType::TEMPERATURE, 3, 9600, 0x0001, ModbusCommandType::INPUT_REGISTER};
 ModbusObject humidity = {SensorType::HUMIDITY, 3, 9600, 0x0002, ModbusCommandType::INPUT_REGISTER};
-ModbusObject anemoMeter = {SensorType::ANEMOMETER, 1, 4800, 0x0001, ModbusCommandType::HOLDING_REGISTER};
+ModbusObject anemoMeter = {SensorType::ANEMOMETER, 1, 4800, 0x0000, ModbusCommandType::HOLDING_REGISTER};
 ModbusObject ammonia = {SensorType::AMMONIA, 1, 9600, 0x07D1, ModbusCommandType::HOLDING_REGISTER};
 
 Modbus *modbus = nullptr;
@@ -19,7 +19,7 @@ WiFiConnection wifi;
  * [temperature, humidity, ammonia, anemometer]
  * if not connected assign as null, but do not change order
  */
-ModbusObject *modbusObject[] = {&temperature, &humidity, nullptr, nullptr};
+ModbusObject *modbusObject[] = {nullptr, nullptr, nullptr, &anemoMeter};
 
 void setup()
 {
@@ -28,7 +28,7 @@ void setup()
 
 	modbus = new Modbus(modbusObject, (sizeof(modbusObject) / sizeof(modbusObject[0])));
 	modbus->begin();
-	light.begin();
+	// light.begin();
 }
 
 void loop()
@@ -39,14 +39,17 @@ void loop()
 	{
 		if (modbusObject[i] != nullptr)
 		{
-			sensorValues[i] = modbus->readSingle(modbusObject[i]) / 10.0F;
+			if (modbusObject[i]->sensor == SensorType::ANEMOMETER)
+				sensorValues[i] = modbus->readSingle(modbusObject[i]);
+			else
+				sensorValues[i] = modbus->readSingle(modbusObject[i]) / 10.0F;
 		}
 		else
 		{
 			sensorValues[i] = -404;
 		}
 	}
-	uint16_t lux = light.lightStrengthLux();
+	uint16_t lux = 0; // light.lightStrengthLux();
 	SensorData sensor = {sensorValues[0], sensorValues[1], sensorValues[2], lux, static_cast<int>(sensorValues[3])};
 	String payload = wifi.publishMQTT(sensor);
 	wifi.reconnect();

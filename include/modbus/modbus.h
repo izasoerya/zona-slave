@@ -59,78 +59,71 @@ void Modbus::begin()
     pinMode(pinRE, OUTPUT);
     pinMode(pinDE, OUTPUT);
     digitalWrite(pinDE, LOW);
-    digitalWrite(pinDE, LOW);
+    digitalWrite(pinRE, LOW);
+
     modbus.preTransmission(preTransmission);
     modbus.postTransmission(postTransmission);
-    if (objectLength == 1)
+
+    for (int i = 0; i < objectLength; i++)
     {
-        Serial2.begin(object[0]->baudRate);
-        // modbus.begin(object[0]->id, Serial2);
-    }
-    else
-    {
-        if (object[0]->baudRate != object[1]->baudRate)
+        if (object[i] != nullptr)
         {
-            Serial.println("Baud Rate is different!");
-            while (1)
-                ;
+            Serial2.begin(object[i]->baudRate);
+            break; // Exit after finding the first valid object
         }
-        Serial2.begin(object[0]->baudRate);
     }
 }
 
 float Modbus::readSingle(ModbusObject *obj)
 {
+    if (obj == nullptr)
+    {
+        return -69; // prevent null pointer dereference
+    }
+
     ModbusObject *selectedObject = nullptr;
 
     for (int i = 0; i < objectLength; i++)
     {
+        if (object[i] == nullptr)
+        {
+            continue;
+        }
+
         if (obj->sensor == object[i]->sensor)
         {
             selectedObject = object[i];
             break;
         }
     }
+
     if (selectedObject == nullptr)
     {
-        return -69; // Handle Deref nullpointer
+        return -69;
     }
+
     modbus.begin(selectedObject->id, Serial2);
 
     uint8_t result;
     if (selectedObject->type == ModbusCommandType::INPUT_REGISTER)
     {
-        Serial.println("inputreg");
         result = modbus.readInputRegisters(selectedObject->registerAddress, 1);
-        if (result == modbus.ku8MBSuccess)
-        {
-            return modbus.getResponseBuffer(0);
-        }
-        else
-        {
-            return result;
-        }
-        Serial.println(selectedObject->sensor);
-        Serial.println(selectedObject->registerAddress);
     }
     else if (selectedObject->type == ModbusCommandType::HOLDING_REGISTER)
     {
-        Serial.println("holdingreg");
         result = modbus.readHoldingRegisters(selectedObject->registerAddress, 1);
-        if (result == modbus.ku8MBSuccess)
-        {
-            return modbus.getResponseBuffer(0);
-        }
-        else
-        {
-            return result;
-        }
-        Serial.println(selectedObject->id);
-        Serial.println(selectedObject->sensor);
-        Serial.println(selectedObject->registerAddress);
     }
     else
     {
-        return -68; // Unsupported Modbus command type
+        return -68; // Unknown command type
+    }
+
+    if (result == modbus.ku8MBSuccess)
+    {
+        return modbus.getResponseBuffer(0);
+    }
+    else
+    {
+        return -70 - result; // return error indicator
     }
 }
