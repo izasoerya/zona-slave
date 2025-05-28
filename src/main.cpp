@@ -12,14 +12,21 @@ ModbusObject ammonia = {SensorType::AMMONIA, 1, 9600, 0x07D1, ModbusCommandType:
 Modbus *modbus = nullptr;
 DFRobot_B_LUX_V30B light(13);
 WiFiConnection wifi;
-ModbusObject modbusObject[] = {temperature, humidity};
+
+/*
+ * @brief
+ * Order of modbusObject, must follow this!
+ * [temperature, humidity, ammonia, anemometer]
+ * if not connected assign as null, but do not change order
+ */
+ModbusObject *modbusObject[] = {&temperature, &humidity, nullptr, nullptr};
 
 void setup()
 {
 	Serial.begin(115200);
 	wifi.begin();
 
-	modbus = new Modbus(modbusObject, (sizeof(modbusObject) / sizeof(ModbusObject)));
+	modbus = new Modbus(modbusObject, (sizeof(modbusObject) / sizeof(modbusObject[0])));
 	modbus->begin();
 	light.begin();
 }
@@ -27,17 +34,24 @@ void setup()
 void loop()
 {
 	wifi.reconnectMQTT();
-
-	float temp = modbus->readSingle(&modbusObject[1]) / 10.0F;
-	float hum = modbus->readSingle(&modbusObject[2]) / 10.0F;
-	float nh3 = modbus->readSingle(&modbusObject[0]);
-	uint16_t anemo = 0; // modbus->readSingle(&anemoMeter);
+	float sensorValues[4];
+	for (int i = 0; i < sizeof(modbusObject) / sizeof(modbusObject[0]); i++)
+	{
+		if (modbusObject[i] != nullptr)
+		{
+			sensorValues[i] = modbus->readSingle(modbusObject[i]) / 10.0F;
+		}
+		else
+		{
+			sensorValues[i] = -404;
+		}
+	}
 	uint16_t lux = light.lightStrengthLux();
-	SensorData sensor = {temp, hum, nh3, lux, anemo};
+	SensorData sensor = {sensorValues[0], sensorValues[1], sensorValues[2], lux, static_cast<int>(sensorValues[3])};
 	String payload = wifi.publishMQTT(sensor);
 	wifi.reconnect();
 
-	delay(5000);
+	delay(15000);
 }
 
 //
