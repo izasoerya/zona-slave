@@ -22,26 +22,27 @@ void WiFiConnection::begin()
 String WiFiConnection::publishMQTT(SensorData data)
 {
     String finalData;
-    if (data.windSpeed != -6)
+    if (data.windSpeed != -404)
     {
         jsonDoc["wind_speed"] = (data.windSpeed);
         mqttClient.beginPublish(mqttTopicAnemo, measureJson(jsonDoc), 0);
         serializeJson(jsonDoc, mqttClient);
+        serializeJson(jsonDoc, Serial);
         mqttClient.endPublish();
         Serial.println("Data published to MQTT");
     }
     else
     {
-        jsonDoc["temperature"] = (data.temperature);
-        jsonDoc["humidity"] = (data.humidity);
-        jsonDoc["ammonia"] = (data.nh3);
+        jsonDoc["temperature"] = round(data.temperature * 10) / 10.0;
+        jsonDoc["humidity"] = round(data.humidity * 10) / 10.0;
+        jsonDoc["ammonia"] = round(data.nh3 * 10) / 10.0;
         jsonDoc["light_intensity"] = (data.lux);
         mqttClient.beginPublish(mqttTopicMain, measureJson(jsonDoc), 0);
         serializeJson(jsonDoc, mqttClient);
+        serializeJson(jsonDoc, Serial);
         mqttClient.endPublish();
         Serial.println("Data published to MQTT");
     }
-    Serial.println(data.toString());
     return finalData;
 }
 
