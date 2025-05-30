@@ -32,6 +32,9 @@ private:
     WiFiClient wifiClient;
     PubSubClient mqttClient;
     JsonDocument jsonDoc;
+    static uint8_t _counterReset;
 };
+
+inline uint8_t WiFiConnection::_counterReset = 0;
 
 #endif // WIFI_H

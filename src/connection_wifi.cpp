@@ -9,12 +9,20 @@ void WiFiConnection::begin()
 {
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, password);
+    _counterReset = 0; // Reset the counter at the start
     while (WiFi.status() != WL_CONNECTED)
     {
         delay(500);
+        _counterReset++;
+        if (_counterReset > 30)
+        {
+            Serial.println("Failed to connect to WiFi, resetting ESP32...");
+            ESP.restart();
+        }
         Serial.println("Connecting to WiFi..");
     }
     Serial.print("Connected to WiFi with IP: ");
+    _counterReset = 0; 
     Serial.println(WiFi.localIP());
     mqttClient.setServer(mqttServer, mqttPort);
 }
@@ -62,10 +70,17 @@ void WiFiConnection::reconnectMQTT()
         Serial.print("Attempting MQTT connection...");
         if (mqttClient.connect(mqttTopicMain))
         {
+            _counterReset = 0; // Reset the counter on successful connection
             Serial.println("connected");
         }
         else
         {
+            if(_counterReset > 5)
+            {
+                Serial.println("Failed to connect to MQTT broker, resetting ESP32...");
+                ESP.restart();
+            }
+            _counterReset++;
             Serial.print("failed, rc=");
             Serial.print(mqttClient.state());
             Serial.println(" try again in 5 seconds");
