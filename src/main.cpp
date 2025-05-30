@@ -19,7 +19,7 @@ WiFiConnection wifi;
  * [temperature, humidity, ammonia, anemometer]
  * if not connected assign as null, but do not change order
  */
-ModbusObject *modbusObject[] = {nullptr, nullptr, nullptr, &anemoMeter};
+ModbusObject *modbusObject[] = {&temperature, &humidity, nullptr, nullptr};
 
 void setup()
 {
@@ -28,7 +28,7 @@ void setup()
 
 	modbus = new Modbus(modbusObject, (sizeof(modbusObject) / sizeof(modbusObject[0])));
 	modbus->begin();
-	// light.begin();y
+	light.begin();
 }
 
 void loop()
@@ -49,7 +49,7 @@ void loop()
 			sensorValues[i] = -404;
 		}
 	}
-	uint16_t lux =  0; //light.lightStrengthLux();
+	uint16_t lux = light.lightStrengthLux();
 	SensorData sensor = {sensorValues[0], sensorValues[1], sensorValues[2], lux, static_cast<int>(sensorValues[3])};
 	String payload = wifi.publishMQTT(sensor);
 	wifi.reconnect();
