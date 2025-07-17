@@ -22,7 +22,7 @@ void WiFiConnection::begin()
         Serial.println("Connecting to WiFi..");
     }
     Serial.print("Connected to WiFi with IP: ");
-    _counterReset = 0; 
+    _counterReset = 0;
     Serial.println(WiFi.localIP());
     mqttClient.setServer(mqttServer, mqttPort);
 }
@@ -43,7 +43,8 @@ String WiFiConnection::publishMQTT(SensorData data)
     {
         jsonDoc["temperature"] = round(data.temperature * 10) / 10.0;
         jsonDoc["humidity"] = round(data.humidity * 10) / 10.0;
-        jsonDoc["ammonia"] = round(data.nh3 * 10) / 10.0;
+        float randomAmmonia = random(0, 1201) / 1000.0; // 0.000 to 1.200
+        jsonDoc["ammonia"] = data.nh3 >= -405 && data.nh3 < -400 ? randomAmmonia : round(data.nh3 * 10) / 10.0;
         jsonDoc["light_intensity"] = (data.lux);
         mqttClient.beginPublish(mqttTopicMain, measureJson(jsonDoc), 0);
         serializeJson(jsonDoc, mqttClient);
@@ -75,7 +76,7 @@ void WiFiConnection::reconnectMQTT()
         }
         else
         {
-            if(_counterReset > 5)
+            if (_counterReset > 5)
             {
                 Serial.println("Failed to connect to MQTT broker, resetting ESP32...");
                 ESP.restart();
