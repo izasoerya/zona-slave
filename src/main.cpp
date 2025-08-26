@@ -1,136 +1,135 @@
 #include <Arduino.h>
+#include <Wire.h>
+
 #include "connection_wifi.h"
 #include "ambient_light.h"
 #include "models.h"
-#include "modbus/modbus.h"
+#include "communication/modbus.h"
+#include "communication/object_declaration.h"
 
-ModbusObject temperature = {SensorType::TEMPERATURE, 3, 9600, 0x0001, ModbusCommandType::INPUT_REGISTER};
-ModbusObject humidity = {SensorType::HUMIDITY, 3, 9600, 0x0002, ModbusCommandType::INPUT_REGISTER};
-ModbusObject anemoMeter = {SensorType::ANEMOMETER, 1, 4800, 0x0000, ModbusCommandType::HOLDING_REGISTER};
-ModbusObject ammonia = {SensorType::AMMONIA, 1, 9600, 0x07D1, ModbusCommandType::HOLDING_REGISTER};
-
-Modbus *modbus = nullptr;
+ModbusObject modbusObject[] = {ammonia, anemoMeter, temperature, humidity};
+Modbus modbus(modbusObject, (sizeof(modbusObject) / sizeof(ModbusObject)));
 DFRobot_B_LUX_V30B light(13);
 WiFiConnection wifi;
-
-/*
- * @brief
- * Order of modbusObject, must follow this!
- * [temperature, humidity, ammonia, anemometer]
- * if not connected assign as null, but do not change order
- */
-ModbusObject *modbusObject[] = {&temperature, &humidity, nullptr, nullptr};
+bool lightPresent = false;
 
 void setup()
 {
 	Serial.begin(115200);
+	Serial2.begin(9600);
 	wifi.begin();
 
-	modbus = new Modbus(modbusObject, (sizeof(modbusObject) / sizeof(modbusObject[0])));
-	modbus->begin();
-	light.begin();
+	modbus.begin();
+	Wire.begin();
+	Wire.beginTransmission(0x94 >> 1); // 0x94 is 8-bit, shift right for 7-bit address
+	if (Wire.endTransmission() == 0)
+	{
+		light.begin();
+		lightPresent = true;
+		Serial.println("Light sensor found.");
+	}
+	else
+	{
+		Serial.println("Light sensor NOT found at 0x94.");
+	}
+	Serial.println("Setup Completed\n");
 }
 
 void loop()
 {
 	wifi.reconnectMQTT();
-	float sensorValues[4];
-	for (int i = 0; i < sizeof(modbusObject) / sizeof(modbusObject[0]); i++)
-	{
-		if (modbusObject[i] != nullptr)
-		{
-			if (modbusObject[i]->sensor == SensorType::ANEMOMETER)
-				sensorValues[i] = modbus->readSingle(modbusObject[i]);
-			else
-				sensorValues[i] = modbus->readSingle(modbusObject[i]) / 10.0F;
-		}
-		else
-		{
-			sensorValues[i] = -404;
-		}
-	}
-	uint16_t lux = light.lightStrengthLux();
-	SensorData sensor = {sensorValues[0], sensorValues[1], sensorValues[2], lux, static_cast<int>(sensorValues[3])};
+
+	uint16_t anemoMeterValue = modbus.readSingle(anemoMeter);
+	float ammoniaValue = modbus.readSingle(ammonia) / 10.0F;
+	float temperatureValue = modbus.readSingle(temperature) / 10.0F;
+	float humidityValue = modbus.readSingle(humidity) / 10.0F;
+	uint16_t lux = lightPresent ? light.lightStrengthLux() : 226;
+
+	SensorData sensor = {temperatureValue, humidityValue, ammoniaValue, lux, anemoMeterValue};
+	Serial.printf("Data: %s\n", sensor.toString().c_str());
 	String payload = wifi.publishMQTT(sensor);
 	wifi.reconnect();
 
 	delay(15000);
 }
 
-//
-// #include <Arduino.h>
-// // Optional: define RS485 DE/RE control pin if your module requires it
-// #define RS485_DIR 4 // Change to your DE/RE pin if needed
+/**
+ * @brief
+ * USE THIS FOR SETTING MODBUS DEVICE,
+ * SUCH AS BAUDRATE, SLAVEID, ETC.
+ */
 
-// uint16_t modbusCRC(uint8_t *buf, uint8_t len);
+// #include <Arduino.h>
+// #include <ModbusMaster.h>
+
+// ModbusMaster node;
+
+// #define RS485_DIR 23
+// #define RS485_DID 25
+
+// void preTransmission();
+// void postTransmission();
 
 // void setup()
 // {
-// 	Serial.begin(115200); // Debug output
-// 	Serial2.begin(4800);  // RS485 Modbus line
+// 	Serial.begin(115200); // Debug
+// 	Serial2.begin(9600);  // RS485 bus
 
 // 	pinMode(RS485_DIR, OUTPUT);
-// 	digitalWrite(RS485_DIR, LOW); // Initially receive mode
+// 	pinMode(RS485_DID, OUTPUT);
+// 	digitalWrite(RS485_DIR, LOW);
+// 	digitalWrite(RS485_DID, LOW);
+
+// 	node.begin(2, Serial2); // 2 = slave address (update accordingly)
+// 	node.preTransmission(preTransmission);
+// 	node.postTransmission(postTransmission);
 
 // 	delay(1000); // Allow slave to boot
-
-// 	// Build Modbus RTU frame: [SlaveID][Function][AddrHi][AddrLo][ValHi][ValLo][CRCLo][CRCHi]
-// 	uint8_t frame[8];
-// 	frame[0] = 0x01; // Slave address
-// 	frame[1] = 0x06; // Function code: Write Single Register
-// 	frame[2] = 0x07; // Register high byte
-// 	frame[3] = 0xD1; // Register low byte (0x0066)
-// 	frame[4] = 0x00; // Value high byte
-// 	frame[5] = 0x02; // Value low byte (new slave ID = 3)
-
-// 	uint16_t crc = modbusCRC(frame, 6);
-// 	frame[6] = crc & 0xFF;		  // CRC low byte
-// 	frame[7] = (crc >> 8) & 0xFF; // CRC high byte
-
-// 	// Switch RS485 to transmit
-// 	digitalWrite(RS485_DIR, HIGH);
-// 	delay(2); // RS485 driver settle time
-
-// 	for (int i = 0; i < 8; i++)
-// 	{
-// 		Serial2.write(frame[i]);
-// 		Serial.print("0x");
-// 		Serial.print(frame[i], HEX);
-// 		Serial.print(" ");
-// 	}
-
-// 	Serial.println("\nSent Modbus request to change address to 3");
-
-// 	Serial2.flush(); // Ensure all bytes sent
-// 	delay(2);		 // Allow slave to finish receiving
-
-// 	digitalWrite(RS485_DIR, LOW); // Switch RS485 back to receive
 // }
 
 // void loop()
 // {
-// 	// Nothing in loop for now
+// 	uint8_t result, resultWrite;
+// 	uint16_t data;
+
+// 	// resultWrite = node.writeSingleRegister(0x07D1, 2);
+// 	// if (resultWrite == node.ku8MBSuccess)
+// 	// {
+// 	// 	data = node.getResponseBuffer(0x00); // first register
+// 	// 	Serial.print("Register 0x07D1 = ");
+// 	// 	Serial.println(data);
+// 	// }
+// 	// else
+// 	// {
+// 	// 	Serial.print("Read failed, error: ");
+// 	// 	Serial.println(resultWrite, HEX);
+// 	// }
+
+// 	result = node.readHoldingRegisters(0x000, 1);
+
+// 	if (result == node.ku8MBSuccess)
+// 	{
+// 		data = node.getResponseBuffer(0x00); // first register
+// 		Serial.print("Register 0x07D1 = ");
+// 		Serial.println(data);
+// 	}
+// 	else
+// 	{
+// 		Serial.print("Read failed, error: ");
+// 		Serial.println(result, HEX);
+// 	}
+
+// 	delay(3000);
 // }
 
-// // CRC calculation (Modbus RTU CRC-16, LSB first)
-// uint16_t modbusCRC(uint8_t *buf, uint8_t len)
+// void preTransmission()
 // {
-// 	uint16_t crc = 0xFFFF;
-// 	for (int pos = 0; pos < len; pos++)
-// 	{
-// 		crc ^= (uint16_t)buf[pos];
-// 		for (int i = 0; i < 8; i++)
-// 		{
-// 			if ((crc & 0x0001) != 0)
-// 			{
-// 				crc >>= 1;
-// 				crc ^= 0xA001;
-// 			}
-// 			else
-// 			{
-// 				crc >>= 1;
-// 			}
-// 		}
-// 	}
-// 	return crc;
+// 	digitalWrite(RS485_DIR, HIGH); // TX mode
+// 	digitalWrite(RS485_DID, HIGH); // TX mode
+// }
+
+// void postTransmission()
+// {
+// 	digitalWrite(RS485_DIR, LOW); // RX mode
+// 	digitalWrite(RS485_DID, LOW); // RX mode
 // }
