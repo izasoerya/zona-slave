@@ -5,7 +5,7 @@
 
 const ModbusObject ammonia = {
     SensorType::AMMONIA,
-    1, 9600, 0x07D1, 1,
+    1, 9600, 0x0002, 1,
     ModbusCommandType::HOLDING_REGISTER};
 const ModbusObject anemoMeter = {
     SensorType::ANEMOMETER,
