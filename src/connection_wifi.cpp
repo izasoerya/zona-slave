@@ -9,7 +9,7 @@ void WiFiConnection::begin()
 {
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, password);
-    _counterReset = 0; // Reset the counter at the start
+    _counterReset = 0;
     while (WiFi.status() != WL_CONNECTED)
     {
         delay(500);
@@ -30,27 +30,30 @@ void WiFiConnection::begin()
 String WiFiConnection::publishMQTT(SensorData data)
 {
     String finalData;
-    if (data.windSpeed != -404)
+    if (data.windSpeed != 226)
     {
         jsonDoc["wind_speed"] = (data.windSpeed);
         mqttClient.beginPublish(mqttTopicAnemo, measureJson(jsonDoc), 0);
         serializeJson(jsonDoc, mqttClient);
-        serializeJson(jsonDoc, Serial);
         mqttClient.endPublish();
-        Serial.println("Data published to MQTT");
+
+        String payload;
+        serializeJson(jsonDoc, payload);
+        Serial.printf("\nData published to MQTT: %s\n", payload.c_str());
     }
     else
     {
         jsonDoc["temperature"] = round(data.temperature * 10) / 10.0;
         jsonDoc["humidity"] = round(data.humidity * 10) / 10.0;
-        float randomAmmonia = random(0, 1201) / 1000.0; // 0.000 to 1.200
-        jsonDoc["ammonia"] = data.nh3 >= -405 && data.nh3 < -400 ? randomAmmonia : round(data.nh3 * 10) / 10.0;
+        jsonDoc["ammonia"] = round(data.nh3 * 10) / 10.0;
         jsonDoc["light_intensity"] = (data.lux);
         mqttClient.beginPublish(mqttTopicMain, measureJson(jsonDoc), 0);
         serializeJson(jsonDoc, mqttClient);
-        serializeJson(jsonDoc, Serial);
         mqttClient.endPublish();
-        Serial.println("Data published to MQTT");
+
+        String payload;
+        serializeJson(jsonDoc, payload);
+        Serial.printf("\nData published to MQTT: %s\n", payload.c_str());
     }
     return finalData;
 }
