@@ -69,15 +69,19 @@ void Modbus::begin()
         node[i].postTransmission(postTransmission);
         node[i].begin(object[i].slaveId, Serial2);
         Serial.printf(
-            "Device sensor: %d, slaveId: %d, baud: %d, reg: %d, len: %d, type: %d\n",
-            object[i].sensor, object[i].slaveId, object[i].baudRate, object[i].registerAddress, object[i].lengthAddress, object[i].type);
+            "Device sensor: %s, slaveId: %d, baud: %d, reg: %d, len: %d, type: %d\n",
+            sensorTypeToString(object[i].sensor),
+            object[i].slaveId,
+            object[i].baudRate,
+            object[i].registerAddress,
+            object[i].lengthAddress,
+            object[i].type);
     }
 }
 
 float Modbus::readSingle(ModbusObject obj)
 {
     uint8_t result;
-    Serial.printf("Object length: %d, Readed slave_id: %d\n", objectLength, obj.slaveId);
     for (int i = 0; i < objectLength; i++)
     {
         if (obj.slaveId == (i + 1))
@@ -85,7 +89,7 @@ float Modbus::readSingle(ModbusObject obj)
             if (obj.type == ModbusCommandType::INPUT_REGISTER)
             {
                 Serial.printf(
-                    "Read Input: %s, slaveId: %d, baud: %d, reg: %d, len: %d, type: %d\n",
+                    "Read Input: %s, slaveId: %d, baud: %d, reg: %d, len: %d, type: %d || ",
                     sensorTypeToString(object[i].sensor),
                     object[i].slaveId,
                     object[i].baudRate,
@@ -98,7 +102,7 @@ float Modbus::readSingle(ModbusObject obj)
             else if (obj.type == ModbusCommandType::HOLDING_REGISTER)
             {
                 Serial.printf(
-                    "Read Holding: %s, slaveId: %d, baud: %d, reg: %d, len: %d, type: %d\n",
+                    "Read Holding: %s, slaveId: %d, baud: %d, reg: %d, len: %d, type: %d || ",
                     sensorTypeToString(object[i].sensor),
                     object[i].slaveId,
                     object[i].baudRate,
@@ -110,17 +114,26 @@ float Modbus::readSingle(ModbusObject obj)
             }
             else
             {
-                Serial.println("Unknown Commands");
+                Serial.printf(
+                    "Error Read: %s, slaveId: %d, baud: %d, reg: %d, len: %d, type: %d || ",
+                    sensorTypeToString(object[i].sensor),
+                    object[i].slaveId,
+                    object[i].baudRate,
+                    object[i].registerAddress,
+                    object[i].lengthAddress,
+                    object[i].type);
                 return -68; // Unknown command type
             }
             if (result == node[i].ku8MBSuccess)
             {
-                Serial.printf("Success: %f\n", node[i].getResponseBuffer(0));
+                Serial.printf("Success: %d\n", node[i].getResponseBuffer(0));
+                delay(10);
                 return node[i].getResponseBuffer(0);
             }
+            Serial.println("Error: No Device Found, Check Wiring and Code!");
             return result;
         }
     }
-    Serial.println("Become Impossible, Device Max Breached!");
-    return -404; // Just impossible, return at once
+    Serial.println("Check the code dude");
+    return -405; // What even is this, check objectLengh and mapping node to pObject
 }
