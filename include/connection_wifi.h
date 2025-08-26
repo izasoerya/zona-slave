@@ -6,7 +6,6 @@
 #include <WiFiClient.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
-#include "pin_definition.h"
 #include "env.h"
 #include "models.h"
 
@@ -33,6 +32,7 @@ private:
     WiFiClient wifiClient;
     PubSubClient mqttClient;
     JsonDocument jsonDoc;
+    uint8_t _counterReset = 0;
 };
 
 #endif // WIFI_H
